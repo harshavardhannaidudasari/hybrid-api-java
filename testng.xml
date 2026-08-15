@@ -5,6 +5,8 @@
     <classes>
       <class name="com.hybridapi.tests.ProductsApiTest"/>
       <class name="com.hybridapi.tests.AuthApiTest"/>
+      <class name="com.hybridapi.tests.JsonPlaceholderTest"/>
+      <class name="com.hybridapi.tests.PostmanEchoTest"/>
     </classes>
   </test>
 </suite>

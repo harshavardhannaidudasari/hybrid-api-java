@@ -57,13 +57,31 @@ authed.get("/auth/me");
 | `HYBRID_API_RETRY_BACKOFF_MS` | `300` | Delay between retries |
 | `HYBRID_API_AUTH_USERNAME` / `HYBRID_API_AUTH_PASSWORD` | `emilys` / `emilyspass` | Credentials the auth tests log in with |
 
-## Target API used for this repo's own tests
+## Target APIs used for this repo's own tests
 
-[dummyjson.com](https://dummyjson.com) - a free, no-signup-required fake
-REST API with real CRUD semantics and a working JWT auth flow, used here
-purely to prove the client works end-to-end. (`reqres.in`, the other common
-choice for this, now requires a paid API key for every endpoint - confirmed
-by `curl` returning 401 on a plain `GET /api/users/2` - so it wasn't used.)
+Three independent, real targets, chosen from
+[public-apis/public-apis](https://github.com/public-apis/public-apis) where
+noted, prove `ApiClient` isn't tied to one specific backend - the same class,
+just constructed with a different base URL, no framework changes needed:
+
+- [dummyjson.com](https://dummyjson.com) - a free, no-signup-required fake
+  REST API with real CRUD semantics and a working JWT auth flow.
+  (`reqres.in`, the other common choice for this, now requires a paid API
+  key for every endpoint - confirmed by `curl` returning 401 on a plain
+  `GET /api/users/2` - so it wasn't used.)
+- [jsonplaceholder.typicode.com](https://jsonplaceholder.typicode.com) - a
+  second fake REST API built for the identical purpose as dummyjson.com
+  ("testing and prototyping"), sourced from the public-apis list. Its `/posts`
+  CRUD semantics mirror dummyjson's `/products` closely enough that the same
+  test shapes port over almost unchanged, on a genuinely different host.
+- [postman-echo.com](https://postman-echo.com) - an HTTP echo service used to
+  directly prove each verb sends what `ApiClient` claims: the response
+  reflects the exact query params/JSON body back. **Originally scoped as
+  `httpbin.org`** (also from the public-apis list), but `httpbin.org`'s
+  public instance was found genuinely returning `503 Service Unavailable`
+  when checked live via `curl` immediately before writing this test - not a
+  one-off blip, a retry a few seconds later gave the same result. Substituted
+  Postman's own echo service, which was healthy and behaves identically.
 
 ## Setup
 
@@ -80,17 +98,19 @@ mvn test
 
 ## What's actually been verified (last real run)
 
-`mvn test` -> **7/7 passed** against the live `dummyjson.com`:
+`mvn test` -> **16/16 passed** against three live targets:
 
 | Test | What it proves |
 |---|---|
-| `getSingleProductReturnsExpectedFields` | `GET` + JSON path parsing |
-| `getProductListRespectsLimitParam` | Query params |
-| `addProductReturnsCreatedIdAndEchoesTitle` | `POST` with a JSON body (`201`) |
-| `updateProductReturnsUpdatedTitle` | `PUT` with a JSON body |
-| `deleteProductMarksIsDeletedTrue` | `DELETE` |
-| `meEndpointRejectsRequestWithNoToken` | Protected endpoint correctly `401`s with no auth |
-| `loginThenMeEndpointReturnsAuthenticatedUser` | Full auth flow: login for a real JWT, then use `withBearerToken` on a second client instance to hit a protected endpoint |
+| `getSingleProductReturnsExpectedFields` | `GET` + JSON path parsing (dummyjson.com) |
+| `getProductListRespectsLimitParam` | Query params (dummyjson.com) |
+| `addProductReturnsCreatedIdAndEchoesTitle` | `POST` with a JSON body (`201`) (dummyjson.com) |
+| `updateProductReturnsUpdatedTitle` | `PUT` with a JSON body (dummyjson.com) |
+| `deleteProductMarksIsDeletedTrue` | `DELETE` (dummyjson.com) |
+| `meEndpointRejectsRequestWithNoToken` | Protected endpoint correctly `401`s with no auth (dummyjson.com) |
+| `loginThenMeEndpointReturnsAuthenticatedUser` | Full auth flow: login for a real JWT, then use `withBearerToken` on a second client instance to hit a protected endpoint (dummyjson.com) |
+| `getSinglePostReturnsExpectedFields` / `getPostListRespectsLimitParam` / `addPostReturnsCreatedIdAndEchoesTitle` / `updatePostReturnsUpdatedTitle` / `deletePostSucceeds` | Same CRUD shape as the dummyjson.com tests, against jsonplaceholder.typicode.com - proves it's not accidentally coupled to dummyjson.com's specific response shape |
+| `getEchoesQueryParams` / `postEchoesJsonBody` / `putEchoesJsonBody` / `deleteSucceeds` | Each verb's query params/body genuinely arrive at the server as sent, against postman-echo.com |
 
 ## Bug found by actually running this (and how it was fixed)
 
