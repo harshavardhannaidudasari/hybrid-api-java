@@ -1,5 +1,7 @@
 # Hybrid API Automation Framework (Java)
 
+[![CI](https://github.com/harshavardhannaidudasari/hybrid-api-java/actions/workflows/ci.yml/badge.svg)](https://github.com/harshavardhannaidudasari/hybrid-api-java/actions/workflows/ci.yml)
+
 A small, reusable REST API test client (RestAssured + TestNG under the hood)
 built to be **imported by other projects**, not just run standalone. It's the
 API-layer sibling to this account's `hybrid-web-mobile-*` (browser + native
